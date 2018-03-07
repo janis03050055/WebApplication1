@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using LinqToExcel;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
 
@@ -154,6 +157,11 @@ namespace WebApplication1.Views
         {
             //上傳檔案
             long size = files.Sum(f => f.Length);
+            if (files.Count < 1)
+            {
+                return Content("<script >alert('請選擇檔案');</script >", "text/html");
+            }
+
             foreach (var file in files)
             {
                 if (file.Length > 0)
@@ -164,24 +172,48 @@ namespace WebApplication1.Views
                     {
                         await file.CopyToAsync(stream);
                     }
-                    /*
+
                     //匯入檔案
                     ExcelQueryFactory excel = new ExcelQueryFactory(filePath);
                     excel.AddMapping<Calendar>(e => e.date, "date");
                     excel.AddMapping<Calendar>(e => e.description, "description");
                     excel.AddMapping<Calendar>(e => e.holidayCategory, "holidayCategory");
-                    excel.AddMapping<Calendar>(e => e.Id, "Id");
+                    excel.AddMapping<Calendar>(e => e.ID, "Id");
                     excel.AddMapping<Calendar>(e => e.isHoliday, "isHoliday");
                     excel.AddMapping<Calendar>(e => e.name, "name");
+
                     var exceldata = excel.Worksheet<Calendar>(1);
-                    foreach(Calendar itemRow in exceldata)
+                    var importErrorMessages = new List<string>();
+
+                    //檢查資料
+                    foreach (var itemRow in exceldata)
                     {
-                        importCalendar.Append(itemRow.id, itemRow.id, itemRow.id, itemRow.id)
+                        var errorMessage = new StringBuilder();
+                        var calendarData = new Calendar();
+
+                        calendarData.date = itemRow.date;
+                        calendarData.description = itemRow.description;
+                        calendarData.name = itemRow.name;
+
+                        //必填不可為空白
+                        if (string.IsNullOrWhiteSpace(itemRow.isHoliday))
+                        {
+                            errorMessage.Append("是否放假 - 不可空白. ");
+                        }
+                        calendarData.isHoliday = itemRow.isHoliday;
+
+                        if (string.IsNullOrWhiteSpace(itemRow.holidayCategory))
+                        {
+                            errorMessage.Append("日期類別 - 不可空白. ");
+                        }
+                        calendarData.holidayCategory = itemRow.holidayCategory;
+
+                        importCalendar.Add(calendarData);
+
                     }
-                    */
+
                 }
             }
-
 
             return Ok(new { count = files.Count, size });
         }
@@ -190,5 +222,6 @@ namespace WebApplication1.Views
         {
             return _context.Calendar.Any(e => e.ID == id);
         }
+
     }
 }

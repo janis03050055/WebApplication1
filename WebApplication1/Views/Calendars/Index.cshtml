@@ -4,6 +4,7 @@
     ViewData["Title"] = "Index";
 }
 
+
 <h2>檔案上傳</h2>
 
 
@@ -20,6 +21,18 @@
         </div>
     </div>
 </form>
+<div id="calendar"></div>
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script src="http://code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
+<script>
+    $('#calendar').datepicker({
+        inline: true,
+        firstDay: 1,
+        showOtherMonths: true,
+        dayNamesMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    });
+</script>
+
 <p>
     <a asp-action="Create">Create New</a>
 </p>
