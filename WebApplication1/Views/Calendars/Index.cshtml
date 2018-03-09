@@ -21,18 +21,12 @@
         </div>
     </div>
 </form>
-<div id="calendar"></div>
-<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
-<script src="http://code.jquery.com/ui/1.11.0/jquery-ui.js"></script>
-<script>
-    $('#calendar').datepicker({
-        inline: true,
-        firstDay: 1,
-        showOtherMonths: true,
-        dayNamesMin: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    });
-</script>
 
+
+
+
+<div id='jqxWidget'></div>
+<div id='log'></div>
 <p>
     <a asp-action="Create">Create New</a>
 </p>
@@ -85,3 +79,34 @@
         }
     </tbody>
 </table>
+<script>
+    
+    $("#jqxWidget").jqxCalendar({
+        enableTooltips: true,
+        width: 220,
+        height: 220
+    });
+    
+    var jsonArray = [{
+        "date": new Date("2018-12-20T11:20:00.000Z")
+    }, {
+        "date": new Date("2018-01-11T09:20:00.000Z")
+    }, {
+        "date": new Date("2018-02-15T03:20:00.000Z")
+    }, {
+        "date": new Date("2018-03-21T23:23:00.000Z")
+    }, {
+        "date": new Date("2018-04-10T11:20:00.000Z")
+    }, {
+        "date": new Date("2018-06-20T11:20:00.000Z")
+    }, {
+        "date": new Date("2018-07-20T11:20:00.000Z")
+    }, {
+        "date": new Date("2018-01-07T11:20:00.000Z")
+    }];
+    for (var obj, i = 0; i < jsonArray.length; i++) {
+        obj = jsonArray[i];
+        $("#jqxWidget").jqxCalendar('addSpecialDate', obj.date, '', 'Special Date');
+    };
+
+</script>
