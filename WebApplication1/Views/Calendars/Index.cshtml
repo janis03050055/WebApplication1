@@ -22,91 +22,106 @@
     </div>
 </form>
 
+<li onclick="Grid_New()">
+    最新公告</li>
+
+    <a asp-action="JSONdata">資料庫內的JSON檔</a>
 
 
-
-<div id='jqxWidget'></div>
-<div id='log'></div>
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.date)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.isHoliday)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.holidayCategory)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.description)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
+    <div id='jqxWidget'></div>
+    <div id='log'></div>
+    <p>
+        <a asp-action="Create">Create New</a>
+    </p>
+    <table class="table">
+        <thead>
             <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.date)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.name)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.isHoliday)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.holidayCategory)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.description)
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.ID">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
-                </td>
+                <th>
+                    @Html.DisplayNameFor(model => model.date)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.name)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.isHoliday)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.holidayCategory)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.description)
+                </th>
+                <th></th>
             </tr>
-        }
-    </tbody>
-</table>
-<script>
-    
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.date)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.isHoliday)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.holidayCategory)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.description)
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                        <a asp-action="Details" asp-route-id="@item.ID">Details</a> |
+                        <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <script>
+
     $("#jqxWidget").jqxCalendar({
         enableTooltips: true,
         width: 220,
         height: 220
     });
-    
+
+
+        /*
     var jsonArray = [{
-        "date": new Date("2018-12-20T11:20:00.000Z")
-    }, {
-        "date": new Date("2018-01-11T09:20:00.000Z")
-    }, {
-        "date": new Date("2018-02-15T03:20:00.000Z")
-    }, {
-        "date": new Date("2018-03-21T23:23:00.000Z")
-    }, {
-        "date": new Date("2018-04-10T11:20:00.000Z")
-    }, {
-        "date": new Date("2018-06-20T11:20:00.000Z")
-    }, {
-        "date": new Date("2018-07-20T11:20:00.000Z")
-    }, {
-        "date": new Date("2018-01-07T11:20:00.000Z")
-    }];
+        "date": new Date("2018-03-17T00:00:00")
+    }, { "date": new Date("2018-03-18T00:00:00")}
+    ];
+
     for (var obj, i = 0; i < jsonArray.length; i++) {
         obj = jsonArray[i];
+        //console.log(obj.constructor === Array);
         $("#jqxWidget").jqxCalendar('addSpecialDate', obj.date, '', 'Special Date');
     };
+        */
+        function Grid_New() {
+             $.ajax({
+            type: 'GET',
+            url: "@Url.Action("JSONdata", "Calendars")",
+            data: { get_param: 'value' },
+            dataType: 'json',
+            success: function (data) {
+                console.log(data);
+                console.log(typeof (data));
+                for (var obj2, obj3, i = 0; i < data.length; i++) {
+                    obj2 = data[i];
+                    obj3 = new Date(obj2.date);
 
-</script>
+                    //console.log(obj3);
+                    
+                }
+            }
+            });
+             $("#jqxWidget").jqxCalendar('addSpecialDate', new Date("2018-03-17T00:00:00"), '', 'Special Date');
+    }
+
+    </script>

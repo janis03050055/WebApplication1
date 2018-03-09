@@ -32,6 +32,12 @@ namespace WebApplication1.Views
             return View(await _context.Calendar.ToListAsync());
         }
 
+        //回傳Json
+        public async Task<IActionResult> JSONdata()
+        {
+            return Json(await _context.Calendar.ToListAsync());
+        }
+
         // GET: Calendars/Details/5
         public async Task<IActionResult> Details(int? id)
         {
