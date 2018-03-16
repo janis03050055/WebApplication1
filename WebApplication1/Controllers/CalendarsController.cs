@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using LinqToExcel;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
 using WebApplication1.Models;
 
 namespace WebApplication1.Views
@@ -159,13 +159,12 @@ namespace WebApplication1.Views
         }
 
         [HttpPost("UploadFiles")]
-        public async Task<IActionResult> Post(List<IFormFile> files, List<Calendar> importCalendar)
+        public async Task<IActionResult> Post(List<IFormFile> files)
         {
             //上傳檔案
-            long size = files.Sum(f => f.Length);
             if (files.Count < 1)
             {
-                return Content("<script >alert('請選擇檔案');</script >", "text/html");
+                return Ok("請選擇檔案，並確定檔案為csv檔。");
             }
 
             foreach (var file in files)
@@ -174,54 +173,114 @@ namespace WebApplication1.Views
                 {
                     //儲存檔案
                     var filePath = $@"{_folder}\{file.FileName}";
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    try
                     {
-                        await file.CopyToAsync(stream);
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
                     }
-
-                    //匯入檔案
-                    ExcelQueryFactory excel = new ExcelQueryFactory(filePath);
-                    excel.AddMapping<Calendar>(e => e.date, "date");
-                    excel.AddMapping<Calendar>(e => e.description, "description");
-                    excel.AddMapping<Calendar>(e => e.holidayCategory, "holidayCategory");
-                    excel.AddMapping<Calendar>(e => e.ID, "Id");
-                    excel.AddMapping<Calendar>(e => e.isHoliday, "isHoliday");
-                    excel.AddMapping<Calendar>(e => e.name, "name");
-
-                    var exceldata = excel.Worksheet<Calendar>(1);
-                    var importErrorMessages = new List<string>();
-
-                    //檢查資料
-                    foreach (var itemRow in exceldata)
+                    catch (Exception ex)
                     {
-                        var errorMessage = new StringBuilder();
-                        var calendarData = new Calendar();
-
-                        calendarData.date = itemRow.date;
-                        calendarData.description = itemRow.description;
-                        calendarData.name = itemRow.name;
-
-                        //必填不可為空白
-                        if (string.IsNullOrWhiteSpace(itemRow.isHoliday))
-                        {
-                            errorMessage.Append("是否放假 - 不可空白. ");
-                        }
-                        calendarData.isHoliday = itemRow.isHoliday;
-
-                        if (string.IsNullOrWhiteSpace(itemRow.holidayCategory))
-                        {
-                            errorMessage.Append("日期類別 - 不可空白. ");
-                        }
-                        calendarData.holidayCategory = itemRow.holidayCategory;
-
-                        importCalendar.Add(calendarData);
-
+                        return Ok("無法儲存檔案到資料庫，請確定您所輸入的檔案(" + file.FileName + ")，沒有被其他應用程式所開啟或應用。");
                     }
+                    
+                   
+                    //讀取csv檔案
+                    var count_line = 0;
+                    
+                    StreamReader sr = new StreamReader(filePath);
+                    while (!sr.EndOfStream) // 每次讀取一行，直到檔尾
+                    {
+                        bool file_success = true;
+                        string line = sr.ReadLine();// 讀取文字到 line 變數    
+                        string[] dataArray = new string[5];
+                        String match_date, match_name, match_isHoliday, match_holidayCategory, match_description;
+                        
+                        // 判斷第一行是否為正確格式
+                        if (count_line == 0 && line != "\"date\",\"name\",\"isHoliday\",\"holidayCategory\",\"description\"")
+                        {
+                            return Ok("請確定資料格式是否正確，是否第一列為date、name、isHoliday、holidayCategory、description，並確定檔案為csv檔。");
+                        }
 
+                        //有時候csv進行另存時會更改格式，改用tab分割。
+                        try
+                        {
+                            dataArray = line.Split(',');
+                            match_date = dataArray[0].Replace("\"", "");
+                            match_name = dataArray[1].Replace("\"", "");
+                            match_isHoliday = dataArray[2].Replace("\"", "");
+                            match_holidayCategory = dataArray[3].Replace("\"", "");
+                            match_description = dataArray[4].Replace("\"", "");
+                        }
+                        catch (Exception ex)
+                        {
+                            dataArray = line.Split('\t');
+                            match_date = dataArray[0].Replace("\"", "");
+                            match_name = dataArray[1].Replace("\"", "");
+                            match_isHoliday = dataArray[2].Replace("\"", "");
+                            match_holidayCategory = dataArray[3].Replace("\"", "");
+                            match_description = dataArray[4].Replace("\"", "");
+                        }
+                        
+                        
+                        if (count_line > 0)
+                        {
+                            //跳過空白行
+                            if (line == ",,,,") file_success = false;
+
+                            //確定必填值是否都有資料
+                            if (match_date == "") return Ok("請確定輸入的檔案(" + file.FileName + ")第" + count_line + "行的date是不有填寫。");
+                            if (match_isHoliday != "是" && match_isHoliday != "否") return Ok("請確定輸入的檔案(" + file.FileName + ")第" + count_line + "行的isHoliday是不有填寫是或否。");
+                            if (match_holidayCategory == "") return Ok("請確定輸入的檔案(" + file.FileName + ")第" + count_line + "行的holidayCategory是不有填寫。");
+                        }
+                        
+                        //判斷資料是否格式正確，正確就add一行
+                        if (count_line != 0 && file_success == true)
+                        {                          
+                            try
+                            {
+                                //將日期正規化
+                                DateTime match_date_D = DateTime.ParseExact(dataArray[0].Replace("\"", ""), "yyyy/M/d", System.Globalization.CultureInfo.InvariantCulture);
+                                
+                                //確定資料庫是否有重複資料，沒有則新增，重複則更新資料
+                                if (!CalendarDateExists(match_date_D))
+                                {
+                                    _context.Calendar.Add(new Calendar()
+                                    {
+                                        date = match_date_D,
+                                        name = match_name,
+                                        isHoliday = match_isHoliday,
+                                        holidayCategory = match_holidayCategory,
+                                        description = match_description
+                                    });
+                                }
+                                else
+                                {
+                                    _context.Update(new Calendar()
+                                    {
+                                        date = match_date_D,
+                                        name = match_name,
+                                        isHoliday = match_isHoliday,
+                                        holidayCategory = match_holidayCategory,
+                                        description = match_description
+                                    });
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                return Ok("請確定輸入的檔案("+ file.FileName + ")第"+ count_line + "行內容的日期格式是否正確須為 yyyy/M/d 。(年為4碼西元年)");
+                            }
+                            
+                        }
+                        count_line = count_line + 1;
+                    }
+                    //全部資料都正確，就savechange
+                    await _context.SaveChangesAsync();
                 }
             }
 
-            return Ok(new { count = files.Count, size });
+            return Ok("資料匯入成功!!");
         }
 
         private bool CalendarExists(int id)
@@ -229,5 +288,9 @@ namespace WebApplication1.Views
             return _context.Calendar.Any(e => e.ID == id);
         }
 
+        private bool CalendarDateExists(DateTime date)
+        {
+            return _context.Calendar.Any(e => e.date == date);
+        }
     }
 }

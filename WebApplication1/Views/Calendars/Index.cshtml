@@ -11,78 +11,24 @@
 <form method="post" enctype="multipart/form-data" asp-controller="UploadFiles" asp-action="Index">
     <div class="form-group">
         <div class="col-md-10">
-            <p>從政府部門<a href="https://data.gov.tw/dataset/26557">下載</a>一Excel檔，並上傳至此。</p>
+            <p>從政府部門<a href="https://data.gov.tw/dataset/26557">下載</a>一csv檔，並上傳至此。</p>
             <input type="file" name="files" />
         </div>
     </div>
     <div class="form-group">
         <div class="col-md-10">
-            <input type="submit" value="匯入" />
+            <input type="submit" value="上傳" />
+        </div>
+        <div class="col-md-10">
+            <input type="button" value="更新日曆" onclick=Grid_New() />
         </div>
     </div>
 </form>
 
-<li onclick="catchdata()">
-    最新公告</li>
-
-    <a asp-action="JSONdata">資料庫內的JSON檔</a>
 
 
-    <div id='jqxWidget'></div>
-    <div id='log'></div>
-    <p>
-        <a asp-action="Create">Create New</a>
-    </p>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>
-                    @Html.DisplayNameFor(model => model.date)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.name)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.isHoliday)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.holidayCategory)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.description)
-                </th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.date)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.name)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.isHoliday)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.holidayCategory)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.description)
-                    </td>
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
-                        <a asp-action="Details" asp-route-id="@item.ID">Details</a> |
-                        <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-    <script>
+<div id='jqxWidget'></div>
+<script>
 
     $("#jqxWidget").jqxCalendar({
         enableTooltips: true,
@@ -105,9 +51,6 @@
             }
             });
     }
-        Grid_New()
+    Grid_New()
 
-
-        
-
-    </script>
+</script>
