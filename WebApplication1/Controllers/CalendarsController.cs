@@ -189,7 +189,7 @@ namespace WebApplication1.Views
                     //讀取csv檔案
                     var count_line = 0;
                     
-                    StreamReader sr = new StreamReader(filePath);
+                    StreamReader sr = new StreamReader(filePath, Encoding.GetEncoding("Big5"));
                     while (!sr.EndOfStream) // 每次讀取一行，直到檔尾
                     {
                         bool file_success = true;
@@ -198,7 +198,7 @@ namespace WebApplication1.Views
                         String match_date, match_name, match_isHoliday, match_holidayCategory, match_description;
                         
                         // 判斷第一行是否為正確格式
-                        if (count_line == 0 && line != "\"date\",\"name\",\"isHoliday\",\"holidayCategory\",\"description\"")
+                        if (count_line == 0 && (line != "\"date\",\"name\",\"isHoliday\",\"holidayCategory\",\"description\"" && line != "date\tname\tisHoliday\tholidayCategory\tdescription"))
                         {
                             return Ok("請確定資料格式是否正確，是否第一列為date、name、isHoliday、holidayCategory、description，並確定檔案為csv檔。");
                         }
@@ -222,13 +222,12 @@ namespace WebApplication1.Views
                             match_holidayCategory = dataArray[3].Replace("\"", "");
                             match_description = dataArray[4].Replace("\"", "");
                         }
-                        
-                        
-                        if (count_line > 0)
-                        {
-                            //跳過空白行
-                            if (line == ",,,,") file_success = false;
 
+                        //跳過空白行
+                        if (line == ",,,," || line == "\t\t\t\t") file_success = false;
+
+                        if (count_line > 0 && file_success == true)
+                        {
                             //確定必填值是否都有資料
                             if (match_date == "") return Ok("請確定輸入的檔案(" + file.FileName + ")第" + count_line + "行的date是不有填寫。");
                             if (match_isHoliday != "是" && match_isHoliday != "否") return Ok("請確定輸入的檔案(" + file.FileName + ")第" + count_line + "行的isHoliday是不有填寫是或否。");

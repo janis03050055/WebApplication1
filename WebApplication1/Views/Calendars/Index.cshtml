@@ -12,15 +12,12 @@
     <div class="form-group">
         <div class="col-md-10">
             <p>從政府部門<a href="https://data.gov.tw/dataset/26557">下載</a>一csv檔，並上傳至此。</p>
-            <input type="file" name="files" />
+            <input type="file" name="files" accept=".csv" onchange="checkfile(this);" />
         </div>
     </div>
     <div class="form-group">
         <div class="col-md-10">
-            <input type="submit" value="上傳" />
-        </div>
-        <div class="col-md-10">
-            <input type="button" value="更新日曆" onclick=Grid_New() />
+            <input type="submit" value="上傳"  />
         </div>
     </div>
 </form>
@@ -35,7 +32,7 @@
         width: 220,
         height: 220
     });
-    function Grid_New() {
+    function update_Calendar() {
              $.ajax({
             type: 'GET',
             url: "@Url.Action("JSONdata", "Calendars")",
@@ -51,6 +48,20 @@
             }
             });
     }
-    Grid_New()
+    update_Calendar()
+    function checkfile(sender) {
+
+        // 可接受的附檔名
+        var validExts = new Array(".csv");
+
+        var fileExt = sender.value;
+        fileExt = fileExt.substring(fileExt.lastIndexOf('.'));
+        if (validExts.indexOf(fileExt) < 0) {
+            alert("檔案類型錯誤，可接受的副檔名有：" + validExts.toString());
+            sender.value = null;
+            return false;
+        }
+        else return true;
+    }
 
 </script>
